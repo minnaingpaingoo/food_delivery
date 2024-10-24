@@ -43,11 +43,11 @@ class _HomeState extends State<Home> {
             ),
             Text(
               "Delicious Food",
-              style: AppWidget.HeaderTextFieldStyle(),
+              style: AppWidget.headerTextFieldStyle(),
             ),
             Text(
               "Discover and Get Great Food",
-              style: AppWidget.LightTextFieldStyle(),
+              style: AppWidget.lightTextFieldStyle(),
             ),
             const SizedBox(
               height: 20,
@@ -85,7 +85,7 @@ class _HomeState extends State<Home> {
                             ),
                             Text(
                               "Fresh and Healthy",
-                              style: AppWidget.LightTextFieldStyle(),
+                              style: AppWidget.lightTextFieldStyle(),
                             ),
                             Text(
                               "\$25",
@@ -119,7 +119,7 @@ class _HomeState extends State<Home> {
                             ),
                             Text(
                               "Spicy and Good",
-                              style: AppWidget.LightTextFieldStyle(),
+                              style: AppWidget.lightTextFieldStyle(),
                             ),
                             Text(
                               "\$28",

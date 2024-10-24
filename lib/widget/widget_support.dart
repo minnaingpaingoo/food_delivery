@@ -10,7 +10,7 @@ class AppWidget{
             );
   }
 
-  static TextStyle HeaderTextFieldStyle(){
+  static TextStyle headerTextFieldStyle(){
     return const TextStyle(
               color: Colors.black,
               fontSize:24,
@@ -19,7 +19,7 @@ class AppWidget{
             );
   }
 
-  static TextStyle LightTextFieldStyle(){
+  static TextStyle lightTextFieldStyle(){
     return const TextStyle(
               color: Colors.black38,
               fontSize:15,
