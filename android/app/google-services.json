@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "374593609008",
+    "firebase_url": "https://trip-booking-platform-default-rtdb.firebaseio.com",
+    "project_id": "trip-booking-platform",
+    "storage_bucket": "trip-booking-platform.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:374593609008:android:7acfe706ba392404b0fcf5",
+        "android_client_info": {
+          "package_name": "com.example.food_delivery"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBOzcNnGTS7vb20cV49g8qw1g74aSjMYCU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
