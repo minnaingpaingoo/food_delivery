@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+//import 'package:food_delivery/admin/admin_login.dart';
 import 'package:food_delivery/pages/welcome_screen/onboard.dart';
 import 'package:food_delivery/widget/app_constant.dart';
 
@@ -21,6 +22,6 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: Onboard(),
     );
-}
+  }
 
 }

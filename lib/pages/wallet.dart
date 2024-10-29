@@ -132,7 +132,7 @@ class _WalletState extends State<Wallet> {
                       border: Border.all(color: const Color(0xFFE9E2E2)),
                       borderRadius: BorderRadius.circular(5)),
                     child: Text(
-                      "\$" + "100",
+                      "\$100",
                       style: AppWidget.semiBoldTextFieldStyle(),
                     ),
                   ),
@@ -147,7 +147,7 @@ class _WalletState extends State<Wallet> {
                       border: Border.all(color: const Color(0xFFE9E2E2)),
                       borderRadius: BorderRadius.circular(5)),
                     child: Text(
-                      "\$" + "500",
+                      "\$500",
                       style: AppWidget.semiBoldTextFieldStyle(),
                     ),
                   ),
@@ -162,7 +162,7 @@ class _WalletState extends State<Wallet> {
                       border: Border.all(color: const Color(0xFFE9E2E2)),
                       borderRadius: BorderRadius.circular(5)),
                     child: Text(
-                      "\$" + "1000",
+                      "\$1000",
                       style: AppWidget.semiBoldTextFieldStyle(),
                     ),
                   ),
@@ -177,7 +177,7 @@ class _WalletState extends State<Wallet> {
                       border: Border.all(color: const Color(0xFFE9E2E2)),
                       borderRadius: BorderRadius.circular(5)),
                     child: Text(
-                      "\$" + "2000",
+                      "\$2000",
                       style: AppWidget.semiBoldTextFieldStyle(),
                     ),
                   ),
@@ -246,7 +246,7 @@ class _WalletState extends State<Wallet> {
       await Stripe.instance.presentPaymentSheet().then((value) async {
         totalAmt = int.parse(wallet!) + int.parse(amount);
         await SharedPreferenceHelper().saveUserWallet(totalAmt.toString());
-        await DatabaseMethods().UpdateUserWallet(id!, totalAmt.toString());
+        await DatabaseMethods().updateUserWallet(id!, totalAmt.toString());
         showDialog(
           context: context,
           builder: (_) => const AlertDialog(
@@ -319,79 +319,77 @@ class _WalletState extends State<Wallet> {
     context: context,
     builder: (context) => AlertDialog(
       content: SingleChildScrollView(
-        child: Container(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Icon(Icons.cancel),
-                  ),
-                  const SizedBox(
-                    width: 60.0,
-                  ),
-                  const Center(
-                    child: Text(
-                      "Add Money",
-                      style: TextStyle(
-                        color: Color(0xFF008080),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(
-                height: 20.0,
-              ),
-              const Text("Amount"),
-              const SizedBox(
-                height: 10.0,
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black38, width: 2.0),
-                  borderRadius: BorderRadius.circular(10)),
-                child: TextField(
-                  controller: amountcontroller,
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    hintText: 'Enter Amount',
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 20.0,
-              ),
-              Center(
-                child: GestureDetector(
-                  onTap: (){
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                GestureDetector(
+                  onTap: () {
                     Navigator.pop(context);
-                    makePayment(amountcontroller.text);
                   },
-                  child: Container(
-                    width: 100,
-                    padding: const EdgeInsets.all(5),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF008080),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        "Pay",
-                        style: TextStyle(color: Colors.white),
-                      ),
+                  child: const Icon(Icons.cancel),
+                ),
+                const SizedBox(
+                  width: 60.0,
+                ),
+                const Center(
+                  child: Text(
+                    "Add Money",
+                    style: TextStyle(
+                      color: Color(0xFF008080),
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-              )
-            ],
-          ),
+              ],
+            ),
+            const SizedBox(
+              height: 20.0,
+            ),
+            const Text("Amount"),
+            const SizedBox(
+              height: 10.0,
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10.0),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.black38, width: 2.0),
+                borderRadius: BorderRadius.circular(10)),
+              child: TextField(
+                controller: amountcontroller,
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  hintText: 'Enter Amount',
+                ),
+              ),
+            ),
+            const SizedBox(
+              height: 20.0,
+            ),
+            Center(
+              child: GestureDetector(
+                onTap: (){
+                  Navigator.pop(context);
+                  makePayment(amountcontroller.text);
+                },
+                child: Container(
+                  width: 100,
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF008080),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      "Pay",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+            )
+          ],
         ),
       ),
     ),
