@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:food_delivery/pages/bottom_nav/bottomnav.dart';
 import 'package:food_delivery/pages/forgot_password/forgot_password.dart';
+import 'package:food_delivery/service/shared_pref.dart';
 import 'package:food_delivery/widget/widget_support.dart';
 import 'package:food_delivery/pages/authentication_page/signup.dart';
     
@@ -76,6 +78,33 @@ class _LogInState extends State<Login> {
           ),
         );
       }
+    }
+  }
+
+  Future<void> login(String email, String password) async {
+    // Perform Firebase login
+    UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
+    // Fetch user details from Firebase after login
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance
+      .collection('users')
+      .doc(userCredential.user?.uid)
+      .get();
+
+    // Save data into SharedPreferences if the user document exists
+    if (userDoc.exists) {
+      Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+      SharedPreferenceHelper helper = SharedPreferenceHelper();
+
+      await helper.saveUserId(userData['Id']);
+      await helper.saveUserName(userData['Name']);
+      await helper.saveUserEmail(userData['Email']);
+      await helper.saveUserWallet(userData['Walllet']);
+      await helper.saveUserWallet(userData['Profile']);
+      
     }
   }
 

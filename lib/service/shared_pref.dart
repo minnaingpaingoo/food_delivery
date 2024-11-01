@@ -32,7 +32,6 @@ class SharedPreferenceHelper{
     return prefs.setString(userProfileKey, getUserProfile);
   }
 
-
   Future<String?> getUserId() async{
     SharedPreferences prefs= await SharedPreferences.getInstance();
     return prefs.getString(userIdKey);
@@ -56,6 +55,15 @@ class SharedPreferenceHelper{
   Future<String?> getUserProfile() async{
     SharedPreferences prefs= await SharedPreferences.getInstance();
     return prefs.getString(userProfileKey);
+  }
+
+  Future<void> clearUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove(SharedPreferenceHelper.userIdKey);
+    await prefs.remove(SharedPreferenceHelper.userNameKey);
+    await prefs.remove(SharedPreferenceHelper.userEmailKey);
+    await prefs.remove(SharedPreferenceHelper.userWalletKey);
+    await prefs.remove(SharedPreferenceHelper.userProfileKey);
   }
 
 }

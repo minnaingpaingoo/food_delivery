@@ -48,6 +48,7 @@ class _SignUpState extends State<SignUp> {
           "Email": emailController.text,
           "Wallet": "0",
           "Id": userId,
+          "Profile":"",
         };
         //Save to the firestore
         await DatabaseMethods().addUserDetail(addUserInfo, userId);

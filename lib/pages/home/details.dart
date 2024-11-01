@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:food_delivery/pages/bottom_nav/bottomnav.dart';
 import 'package:food_delivery/service/database.dart';
 import 'package:food_delivery/service/shared_pref.dart';
 import 'package:food_delivery/widget/widget_support.dart';
@@ -172,7 +173,7 @@ class _DetailsState extends State<Details> {
                           "Name": widget.name,
                           "Price": widget.price,
                           "Quantity": count.toString(),
-                          "Total:": totalAmt.toString(),
+                          "Total": totalAmt.toString(),
                           "Image": widget.image,
                         };
                         await DatabaseMethods().addFoodToCart(addFoodToCart, id!);
@@ -187,6 +188,7 @@ class _DetailsState extends State<Details> {
                             ),
                           ),
                         );
+                        Navigator.push(context, MaterialPageRoute(builder: (context)=> const BottomNav()));
                       },
                       child: Container(
                         width: MediaQuery.of(context).size.width/2,

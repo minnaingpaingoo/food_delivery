@@ -1,8 +1,13 @@
+import 'dart:async';
 import 'dart:io';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-//import 'package:food_delivery/pages/authentication_page/login.dart';
+import 'package:food_delivery/pages/authentication_page/login.dart';
+import 'package:food_delivery/pages/authentication_page/signup.dart';
+import 'package:food_delivery/pages/home/confirm_order.dart';
+import 'package:food_delivery/service/auth.dart';
+import 'package:food_delivery/service/database.dart';
 import 'package:food_delivery/service/shared_pref.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:random_string/random_string.dart';
@@ -16,7 +21,30 @@ class Profile extends StatefulWidget {
 
 class _ProfileState extends State<Profile> {
 
-  String? profile, name, email;
+  String? profile, name, email, id;
+  
+  getthesharedpref() async{
+    id = await SharedPreferenceHelper().getUserId();
+    profile = await SharedPreferenceHelper().getUserProfile();
+    name = await SharedPreferenceHelper().getUserName();
+    email = await SharedPreferenceHelper().getUserEmail();
+    setState(() {
+      
+    });
+  }
+
+  ontheload(){
+    getthesharedpref();
+    setState(() {
+      
+    });
+  }
+
+  @override
+  void initState(){
+    ontheload();
+    super.initState();
+  }
 
   final ImagePicker _picker = ImagePicker();
   File? selectedImage;
@@ -37,8 +65,9 @@ class _ProfileState extends State<Profile> {
       final UploadTask task = firebaseStorageRef.putFile(selectedImage!);
       
       var downloadUrl = await(await task).ref.getDownloadURL();
-
       await SharedPreferenceHelper().saveUserProfile(downloadUrl);
+      //Update the user profile in 'users' collection
+      await DatabaseMethods().updateUserProfile(id!, downloadUrl);
       setState(() {
         
       });
@@ -73,40 +102,75 @@ class _ProfileState extends State<Profile> {
 
     // Check if user confirmed logout
     if (confirmLogout) {
-      await FirebaseAuth.instance.signOut();
-      Navigator.of(context).pushReplacementNamed('/pages/authentication_page/login');
-      //Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> const Login()));
+      await SharedPreferenceHelper().clearUserData();
+      AuthMethod().signOut();
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> const Login()));
     }
   }
 
-  getthesharedpref() async{
-    profile = await SharedPreferenceHelper().getUserProfile();
-    name = await SharedPreferenceHelper().getUserName();
-    email = await SharedPreferenceHelper().getUserEmail();
-    setState(() {
-      
-    });
+  Future<void> deleteAccount(BuildContext context) async {
+    // Show confirmation dialog
+    bool confirmDeleteAcc = await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Confirm Delete Account"),
+          content: const Text("Are you sure you want to delete your account?"),
+          actions: [
+            TextButton(
+              child: const Text("No"),
+              onPressed: () {
+                Navigator.of(context).pop(false); // Return false if canceled
+              },
+            ),
+            TextButton(
+              child: const Text("Yes"),
+              onPressed: () {
+                Navigator.of(context).pop(true); // Return true if confirmed
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    // Check if user confirmed deleted account
+    if (confirmDeleteAcc) {
+      AuthMethod().deleteUser();
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> const SignUp()));
+    }
   }
 
-  ontheload(){
-    getthesharedpref();
-    setState(() {
-      
-    });
-  }
+  Future<void> showOrderDetail() async {
 
-  @override
-  void initState(){
-    ontheload();
-    super.initState();
+    if (id == null) {
+      print("User ID is null. Cannot retrieve order data.");
+      return;
+    }
+
+    try{
+      Map<String, dynamic>? orderData;
+
+      // Fetch all documents in the ConfirmOrders collection
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('ConfirmOrders').get();
+
+      for (var doc in querySnapshot.docs) {
+        orderData = doc.data() as Map<String, dynamic>;
+      }
+
+      if (orderData != null) {
+        Navigator.push(context, MaterialPageRoute(builder: (context) => ConfirmOrder(orderData: orderData!),),);
+      }else {
+        print("Order data is null. Could not navigate to ConfirmOrder.");
+      }
+    }catch (e) {
+      print("Error fetching order data: $e");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-      ),
       body: name == null ?
         const Center(child: CircularProgressIndicator()) :
         SingleChildScrollView(
@@ -132,7 +196,7 @@ class _ProfileState extends State<Profile> {
                         elevation: 10,
                         borderRadius: BorderRadius.circular(60),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.zero,
+                          borderRadius: BorderRadius.circular(60),
                           child: selectedImage==null ?
                             GestureDetector(
                               onTap: (){
@@ -304,33 +368,75 @@ class _ProfileState extends State<Profile> {
                 ),
               ),
               const SizedBox(height: 10,),
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                child: Material(
-                  borderRadius: BorderRadius.circular(10),
-                  elevation: 2,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10)
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(
-                          Icons.delete,
-                          color: Colors.black,
-                        ),
-                        SizedBox(width: 20),
-                        Text(
-                          "Delete Account",
-                          style: TextStyle(
+              GestureDetector(
+                onTap:(){
+                  showOrderDetail();
+                },
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Material(
+                    borderRadius: BorderRadius.circular(10),
+                    elevation: 2,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10)
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(
+                            Icons.confirmation_num,
                             color: Colors.black,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
                           ),
-                        ),
-                      ],
+                          SizedBox(width: 20),
+                          Text(
+                            "Your Confirmed Order",
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10,),
+              GestureDetector(
+                onTap:(){
+                  deleteAccount(context);
+                },
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Material(
+                    borderRadius: BorderRadius.circular(10),
+                    elevation: 2,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10)
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(
+                            Icons.delete,
+                            color: Colors.black,
+                          ),
+                          SizedBox(width: 20),
+                          Text(
+                            "Delete Account",
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
