@@ -4,6 +4,8 @@ import 'package:food_delivery/pages/home/details.dart';
 import 'package:food_delivery/service/database.dart';
 import 'package:food_delivery/service/shared_pref.dart';
 import 'package:food_delivery/widget/widget_support.dart';
+import 'package:provider/provider.dart';
+import 'package:food_delivery/provider/cart_provider.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -13,6 +15,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+
   //For Select Item to change the color
   bool icecream = false;
   bool pizza = false;
@@ -195,21 +198,56 @@ class _HomeState extends State<Home> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                Text(
-                  "Hello, ${name ?? "User"}",
-                  style: AppWidget.boldTextFieldStyle(),
-                ),
-                Container(
-                  margin: const EdgeInsets.only(right:20),
-                  padding: const EdgeInsets.all(3),
-                  decoration: BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.circular(10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Hello, ${name ?? "User"}",
+                    style: AppWidget.boldTextFieldStyle(),
                   ),
-                  child: const Icon(Icons.shopping_cart, color: Colors.white),
-                ),
-              ]),
+                  Consumer<CartProvider>(
+                    builder: (context, cart, child){
+                      return Stack(
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.only(right:15),
+                            padding: const EdgeInsets.all(3),
+                            decoration: BoxDecoration(
+                              color: Colors.black,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: IconButton(
+                              onPressed: (){
+                                //Navigator.push(context, MaterialPageRoute(builder: (context)=> const BottomNav()));
+                              },
+                              icon: const Icon(
+                                Icons.shopping_cart,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          if(cart.cartCount > 0)
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: CircleAvatar(
+                                radius: 10,
+                                backgroundColor: Colors.red,
+                                child: Text(
+                                  cart.cartCount.toString(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              )
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
+              ),
               const SizedBox(
                 height: 30,
               ),

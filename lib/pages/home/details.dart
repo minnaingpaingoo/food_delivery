@@ -3,6 +3,8 @@ import 'package:food_delivery/pages/bottom_nav/bottomnav.dart';
 import 'package:food_delivery/service/database.dart';
 import 'package:food_delivery/service/shared_pref.dart';
 import 'package:food_delivery/widget/widget_support.dart';
+import 'package:provider/provider.dart';
+import 'package:food_delivery/provider/cart_provider.dart';
 
 class Details extends StatefulWidget {
 
@@ -177,6 +179,7 @@ class _DetailsState extends State<Details> {
                           "Image": widget.image,
                         };
                         await DatabaseMethods().addFoodToCart(addFoodToCart, id!);
+                        Provider.of<CartProvider>(context, listen: false).addToCart(1);
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text(

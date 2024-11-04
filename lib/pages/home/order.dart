@@ -1,19 +1,21 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:food_delivery/provider/cart_provider.dart';
 import 'package:food_delivery/service/database.dart';
 import 'package:food_delivery/service/shared_pref.dart';
 import 'package:food_delivery/widget/widget_support.dart';
+import 'package:provider/provider.dart';
 
 
-class Order extends StatefulWidget {
-  const Order({super.key});
+class Orders extends StatefulWidget {
+  const Orders({super.key});
 
   @override
-  State<Order> createState() => _OrderState();
+  State<Orders> createState() => _OrdersState();
 }
 
-class _OrderState extends State<Order> {
+class _OrdersState extends State<Orders> {
 
   Stream? foodStream;
   String? id, wallet, name, email;
@@ -90,6 +92,7 @@ class _OrderState extends State<Order> {
     // Clear cart after order is confirmed
     for (var doc in cartSnapshot.docs) {
       await DatabaseMethods().clearCartAfterConfirm(id!, doc.id);
+      Provider.of<CartProvider>(context, listen: false).resetCart();
     }
 
     setState(() {
@@ -153,6 +156,7 @@ class _OrderState extends State<Order> {
   Future<void> deleteCartItem(String itemId) async {
     
     await DatabaseMethods().deleteCartItem(id!, itemId);
+    Provider.of<CartProvider>(context, listen: false).removeToCart(1);
 
     setState(() {});
   }
