@@ -29,14 +29,17 @@ class _WalletState extends State<Wallet> {
   getthesharedpref() async{
     wallet = await SharedPreferenceHelper().getUserWallet();
     id = await SharedPreferenceHelper().getUserId();
-    setState(() {
+    if (mounted) {
+      setState(() {});
       isLoading = false;
-    });
+    }
   }
 
   ontheload() async{
     await getthesharedpref();
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:food_delivery/pages/authentication_page/login.dart';
@@ -28,16 +27,16 @@ class _ProfileState extends State<Profile> {
     profile = await SharedPreferenceHelper().getUserProfile();
     name = await SharedPreferenceHelper().getUserName();
     email = await SharedPreferenceHelper().getUserEmail();
-    setState(() {
-      
-    });
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   ontheload(){
     getthesharedpref();
-    setState(() {
-      
-    });
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -46,15 +45,24 @@ class _ProfileState extends State<Profile> {
     super.initState();
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
   final ImagePicker _picker = ImagePicker();
   File? selectedImage;
 
   Future getImage() async{
-    var image = await _picker.pickImage(source: ImageSource.gallery);
-    selectedImage = File(image!.path);
-    setState(() {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        selectedImage = File(image.path);
+      });
       uploadImage();
-    });
+    } else {
+      print("Image selection canceled.");
+    }
   }
 
   uploadImage() async{
@@ -65,12 +73,16 @@ class _ProfileState extends State<Profile> {
       final UploadTask task = firebaseStorageRef.putFile(selectedImage!);
       
       var downloadUrl = await(await task).ref.getDownloadURL();
-      await SharedPreferenceHelper().saveUserProfile(downloadUrl);
-      //Update the user profile in 'users' collection
-      await DatabaseMethods().updateUserProfile(id!, downloadUrl);
-      setState(() {
-        
-      });
+
+      if (downloadUrl.isNotEmpty) {
+        // Save and update the profile URL
+        await SharedPreferenceHelper().saveUserProfile(downloadUrl);
+        await DatabaseMethods().updateUserProfile(id!, downloadUrl);
+
+        setState(() {
+          profile = downloadUrl;  // Update state to trigger a UI rebuild
+        });
+      }
     }
   }
 
@@ -141,33 +153,6 @@ class _ProfileState extends State<Profile> {
     }
   }
 
-  Future<void> showOrderDetail() async {
-
-    if (id == null) {
-      print("User ID is null. Cannot retrieve order data.");
-      return;
-    }
-
-    try{
-      Map<String, dynamic>? orderData;
-
-      // Fetch all documents in the ConfirmOrders collection
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('ConfirmOrders').get();
-
-      for (var doc in querySnapshot.docs) {
-        orderData = doc.data() as Map<String, dynamic>;
-      }
-
-      if (orderData != null) {
-        Navigator.push(context, MaterialPageRoute(builder: (context) => ConfirmOrder(orderData: orderData!),),);
-      }else {
-        print("Order data is null. Could not navigate to ConfirmOrder.");
-      }
-    }catch (e) {
-      print("Error fetching order data: $e");
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -214,6 +199,14 @@ class _ProfileState extends State<Profile> {
                                   height: 120,
                                   width: 120,
                                   fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Image.asset(
+                                      "images/avatar.png",
+                                      height: 120,
+                                      width: 120,
+                                      fit: BoxFit.cover,
+                                    );
+                                  },
                                 ),
                             ) :
                             Image.file(
@@ -370,7 +363,7 @@ class _ProfileState extends State<Profile> {
               const SizedBox(height: 10,),
               GestureDetector(
                 onTap:(){
-                  showOrderDetail();
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const ConfirmOrder()));
                 },
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 20),

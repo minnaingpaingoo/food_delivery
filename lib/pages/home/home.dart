@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:food_delivery/pages/home/details.dart';
 import 'package:food_delivery/service/database.dart';
+import 'package:food_delivery/service/shared_pref.dart';
 import 'package:food_delivery/widget/widget_support.dart';
 
 class Home extends StatefulWidget {
@@ -19,11 +20,21 @@ class _HomeState extends State<Home> {
   bool salad = false;
 
   Stream? foodItemStream;
+  String? name;
+
+  getthesharepref()async{
+    name = await SharedPreferenceHelper().getUserName();
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   ontheload() async {
+    await getthesharepref();
     foodItemStream = await DatabaseMethods().getFoodItem("Ice-cream");
-    setState(() {
-      
-    });
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -31,6 +42,12 @@ class _HomeState extends State<Home> {
     ontheload();
     super.initState();
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
 
   Widget allItems () {
     return StreamBuilder(
@@ -180,7 +197,7 @@ class _HomeState extends State<Home> {
             children: [
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                 Text(
-                  "Hello, Min Naing",
+                  "Hello, ${name ?? "User"}",
                   style: AppWidget.boldTextFieldStyle(),
                 ),
                 Container(

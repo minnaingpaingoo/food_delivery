@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 class DatabaseMethods{
   Future addUserDetail(Map<String, dynamic> userInfoMap, String id) async{
     return await FirebaseFirestore.instance
@@ -8,21 +7,21 @@ class DatabaseMethods{
       .set(userInfoMap);
   }
 
-  updateUserWallet(String id, String amount) async{
+  Future updateUserWallet(String id, String amount) async{
     return await FirebaseFirestore.instance
       .collection('users')
       .doc(id)
       .update({"Wallet": amount});
   }
 
-  updateUserProfile(String id, String url) async{
+  Future updateUserProfile(String id, String url) async{
     return await FirebaseFirestore.instance
       .collection('users')
       .doc(id)
       .update({"Profile": url});
   }
 
-  updateQtyAndTotalOfOrder(String id, String itemId, String newQty, String newTotal) async{
+  Future updateQtyAndTotalOfOrder(String id, String itemId, String newQty, String newTotal) async{
     return await FirebaseFirestore.instance
       .collection('users')
       .doc(id)
@@ -56,7 +55,7 @@ class DatabaseMethods{
     return FirebaseFirestore.instance.collection("users").doc(id).collection("Cart").snapshots();
   }
 
-  deleteCartItem(String id, String itemId) async {
+  Future deleteCartItem(String id, String itemId) async {
     await FirebaseFirestore.instance
       .collection('users')
       .doc(id)
@@ -65,7 +64,7 @@ class DatabaseMethods{
       .delete();
   }
 
-  getAllItemsInCart(String id)async{
+  Future getAllItemsInCart(String id)async{
     return await FirebaseFirestore.instance
       .collection('users')
       .doc(id)
@@ -73,11 +72,15 @@ class DatabaseMethods{
       .get();
   }
 
-  saveConfirmOrder(Map<String, dynamic> orderData)async{
-    return await FirebaseFirestore.instance.collection('ConfirmOrders').add(orderData);
+  Future saveConfirmOrder(Map<String, dynamic> orderData, String userId)async{
+    return await FirebaseFirestore.instance
+      .collection('ConfirmOrders')
+      .doc(userId)
+      .collection("Orders")
+      .add(orderData);
   }
 
-  clearCartAfterConfirm(String id, String docId) async{
+  Future clearCartAfterConfirm(String id, String docId) async{
     return await FirebaseFirestore.instance.
       collection('users')
       .doc(id)
@@ -85,4 +88,29 @@ class DatabaseMethods{
       .doc(docId)
       .delete();
   }
+
+  Future<List<Map<String, dynamic>>> getAllOrderConfirm(String userId) async {
+    List<Map<String, dynamic>> allOrders = [];
+
+    try {
+      // Get the reference for the user's Order_confirm collection
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('ConfirmOrders')
+          .doc(userId)
+          .collection('Orders')
+          .get();
+
+      // Loop through each document and add it to the list
+      for (var doc in querySnapshot.docs) {
+        Map<String, dynamic> orderData = doc.data() as Map<String, dynamic>;
+        orderData['OrderID'] = doc.id; // Optionally, store document ID
+        allOrders.add(orderData);
+      }
+    } catch (e) {
+      print("Error fetching order data: $e");
+    }
+
+    return allOrders;
+  }
+
 }

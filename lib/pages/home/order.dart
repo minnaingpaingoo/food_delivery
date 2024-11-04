@@ -1,10 +1,10 @@
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:food_delivery/service/database.dart';
 import 'package:food_delivery/service/shared_pref.dart';
 import 'package:food_delivery/widget/widget_support.dart';
+
 
 class Order extends StatefulWidget {
   const Order({super.key});
@@ -65,7 +65,7 @@ class _OrderState extends State<Order> {
     List<Map<String, dynamic>> orderItems = [];
 
     // Get all items in the cart and save them in orderItems list
-    QuerySnapshot cartSnapshot = DatabaseMethods().getAllItemsInCart(id!);
+    QuerySnapshot cartSnapshot = await DatabaseMethods().getAllItemsInCart(id!);
     for (var doc in cartSnapshot.docs) {
       orderItems.add({
         'FoodName': doc['Name'],
@@ -77,19 +77,19 @@ class _OrderState extends State<Order> {
 
     // Create the order data
     Map<String, dynamic> orderData = {
+      'OrderID':"",
       'Name': name,
       'Email': email,
-      'TotalPrice': total,
-      'OrderDate': Timestamp.now(),
+      'TotalPrice': total.toString(),
+      'OrderDate': DateTime.now().toLocal(),
       'Items': orderItems
     };
 
     // Save order to 'ConfirmOrders' collection in Firestore
-    DatabaseMethods().saveConfirmOrder(orderData);
-
+    await DatabaseMethods().saveConfirmOrder(orderData, id!);
     // Clear cart after order is confirmed
     for (var doc in cartSnapshot.docs) {
-      DatabaseMethods().clearCartAfterConfirm(id!, doc.id);
+      await DatabaseMethods().clearCartAfterConfirm(id!, doc.id);
     }
 
     setState(() {
@@ -135,7 +135,7 @@ class _OrderState extends State<Order> {
                   int newTotal = newQuantity * int.parse(item['Price']);
           
                   // Update the quantity and total in Firestore
-                  DatabaseMethods().updateQtyAndTotalOfOrder(id!, item.id, newQuantity.toString(), newTotal.toString());
+                  await DatabaseMethods().updateQtyAndTotalOfOrder(id!, item.id, newQuantity.toString(), newTotal.toString());
           
                    // Rebuild the widget tree to reflect the updated total
                   setState(() {});
@@ -152,7 +152,7 @@ class _OrderState extends State<Order> {
 
   Future<void> deleteCartItem(String itemId) async {
     
-    DatabaseMethods().deleteCartItem(id!, itemId);
+    await DatabaseMethods().deleteCartItem(id!, itemId);
 
     setState(() {});
   }

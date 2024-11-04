@@ -1,6 +1,5 @@
 import 'package:food_delivery/service/database.dart';
 import 'package:food_delivery/service/shared_pref.dart';
-import 'package:random_string/random_string.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:food_delivery/pages/authentication_page/login.dart';
@@ -29,7 +28,7 @@ class _SignUpState extends State<SignUp> {
   registration() async {
     if(password.isNotEmpty){
       try{
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
+        UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             backgroundColor: Colors.greenAccent,
@@ -41,8 +40,7 @@ class _SignUpState extends State<SignUp> {
             ),
           ),
         );
-
-        String userId= randomAlphaNumeric(10);
+        String userId = userCredential.user!.uid;
         Map<String, dynamic> addUserInfo = {
           "Name": nameController.text,
           "Email": emailController.text,
@@ -52,10 +50,12 @@ class _SignUpState extends State<SignUp> {
         };
         //Save to the firestore
         await DatabaseMethods().addUserDetail(addUserInfo, userId);
+        //Save to the SharedPreferenceHelper
         await SharedPreferenceHelper().saveUserName(nameController.text);
         await SharedPreferenceHelper().saveUserEmail(emailController.text);
         await SharedPreferenceHelper().saveUserWallet("0");
         await SharedPreferenceHelper().saveUserId(userId);
+        await SharedPreferenceHelper().saveUserProfile("");
 
         // ignore: use_build_context_synchronously
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> const BottomNav()));
