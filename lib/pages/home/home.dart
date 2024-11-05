@@ -6,14 +6,15 @@ import 'package:food_delivery/service/shared_pref.dart';
 import 'package:food_delivery/widget/widget_support.dart';
 import 'package:provider/provider.dart';
 import 'package:food_delivery/provider/cart_provider.dart';
+import 'package:food_delivery/pages/bottom_nav/bottomnav.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
 
   @override
   State<Home> createState() => _HomeState();
-}
 
+}
 class _HomeState extends State<Home> {
 
   //For Select Item to change the color
@@ -218,7 +219,7 @@ class _HomeState extends State<Home> {
                             ),
                             child: IconButton(
                               onPressed: (){
-                                //Navigator.push(context, MaterialPageRoute(builder: (context)=> const BottomNav()));
+                                BottomNav.bottomNavKey.currentState?.switchTab(1);
                               },
                               icon: const Icon(
                                 Icons.shopping_cart,

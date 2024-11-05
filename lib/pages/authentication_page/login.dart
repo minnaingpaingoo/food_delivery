@@ -7,6 +7,7 @@ import 'package:food_delivery/pages/forgot_password/forgot_password.dart';
 import 'package:food_delivery/service/shared_pref.dart';
 import 'package:food_delivery/widget/widget_support.dart';
 import 'package:food_delivery/pages/authentication_page/signup.dart';
+import 'package:provider/provider.dart';
     
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -60,6 +61,7 @@ class _LogInState extends State<Login> {
         await helper.saveUserEmail(userData['Email']);
         await helper.saveUserWallet(userData['Wallet']);
         await helper.saveUserProfile(userData['Profile']);
+        await Provider.of(context, listen: false).initializeCount(userData['Id']);
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

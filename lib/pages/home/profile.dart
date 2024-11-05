@@ -9,6 +9,7 @@ import 'package:food_delivery/service/auth.dart';
 import 'package:food_delivery/service/database.dart';
 import 'package:food_delivery/service/shared_pref.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:random_string/random_string.dart';
     
 class Profile extends StatefulWidget {
@@ -78,7 +79,8 @@ class _ProfileState extends State<Profile> {
         // Save and update the profile URL
         await SharedPreferenceHelper().saveUserProfile(downloadUrl);
         await DatabaseMethods().updateUserProfile(id!, downloadUrl);
-
+        //Reset the cart count
+        Provider.of(context, listen: false).resetCart();
         setState(() {
           profile = downloadUrl;  // Update state to trigger a UI rebuild
         });
@@ -116,6 +118,7 @@ class _ProfileState extends State<Profile> {
     if (confirmLogout) {
       await SharedPreferenceHelper().clearUserData();
       AuthMethod().signOut();
+      
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> const Login()));
     }
   }

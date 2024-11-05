@@ -8,11 +8,14 @@ import 'package:food_delivery/pages/home/wallet.dart';
 class BottomNav extends StatefulWidget {
   const BottomNav({super.key});
 
+  static final GlobalKey<BottomNavState> bottomNavKey = GlobalKey<BottomNavState>();
+
   @override
-  State<BottomNav> createState() => _BottomNavState();
+  State<BottomNav> createState() => BottomNavState();
 }
 
-class _BottomNavState extends State<BottomNav> {
+class BottomNavState extends State<BottomNav> {
+
   int currentTabIndex = 0;
 
   late List<Widget> pages;
@@ -31,6 +34,13 @@ class _BottomNavState extends State<BottomNav> {
     pages = [homepage, orders, wallet, profile];
     super.initState();
   }
+
+  void switchTab(int index) {
+    setState(() {
+      currentTabIndex = index;
+    });
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
