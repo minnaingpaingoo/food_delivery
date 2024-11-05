@@ -113,4 +113,14 @@ class DatabaseMethods{
     return allOrders;
   }
 
+  Future initializeCount(String userId) async {
+    final cartSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('Cart')
+        .get();
+
+    return cartSnapshot.docs.length;
+  }
+
 }

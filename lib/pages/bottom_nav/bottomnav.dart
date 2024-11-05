@@ -8,7 +8,7 @@ import 'package:food_delivery/pages/home/wallet.dart';
 class BottomNav extends StatefulWidget {
   const BottomNav({super.key});
 
-  static final GlobalKey<BottomNavState> bottomNavKey = GlobalKey<BottomNavState>();
+  //static final GlobalKey<BottomNavState> bottomNavKey = GlobalKey<BottomNavState>();
 
   @override
   State<BottomNav> createState() => BottomNavState();
@@ -35,11 +35,11 @@ class BottomNavState extends State<BottomNav> {
     super.initState();
   }
 
-  void switchTab(int index) {
-    setState(() {
-      currentTabIndex = index;
-    });
-  }
+  // void switchTab(int index) {
+  //   setState(() {
+  //     currentTabIndex = index;
+  //   });
+  // }
   
   @override
   Widget build(BuildContext context) {

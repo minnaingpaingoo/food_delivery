@@ -6,7 +6,7 @@ import 'package:food_delivery/service/shared_pref.dart';
 import 'package:food_delivery/widget/widget_support.dart';
 import 'package:provider/provider.dart';
 import 'package:food_delivery/provider/cart_provider.dart';
-import 'package:food_delivery/pages/bottom_nav/bottomnav.dart';
+//import 'package:food_delivery/pages/bottom_nav/bottomnav.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -193,6 +193,7 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      //key: BottomNav.bottomNavKey,
       body: SingleChildScrollView(
         child: Container(
           margin: const EdgeInsets.only(left: 20, top: 50),
@@ -219,7 +220,7 @@ class _HomeState extends State<Home> {
                             ),
                             child: IconButton(
                               onPressed: (){
-                                BottomNav.bottomNavKey.currentState?.switchTab(1);
+                                //BottomNav.bottomNavKey.currentState?.switchTab(1);
                               },
                               icon: const Icon(
                                 Icons.shopping_cart,

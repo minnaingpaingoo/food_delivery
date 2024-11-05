@@ -23,7 +23,7 @@ class _OrdersState extends State<Orders> {
   Timer? timer;
 
   void startTimer() {
-    timer = Timer(const Duration(seconds: 2), () {
+    timer = Timer(const Duration(seconds: 1), () {
       if (mounted) {
         setState(() {
           amount = total;
@@ -135,15 +135,35 @@ class _OrdersState extends State<Orders> {
                 child: const Text("Update"),
                 onPressed: () async {
                   int newQuantity = int.parse(quantityController.text);
-                  int newTotal = newQuantity * int.parse(item['Price']);
+                  if(newQuantity > 0){
+                     int newTotal = newQuantity * int.parse(item['Price']);
           
-                  // Update the quantity and total in Firestore
-                  await DatabaseMethods().updateQtyAndTotalOfOrder(id!, item.id, newQuantity.toString(), newTotal.toString());
-          
-                   // Rebuild the widget tree to reflect the updated total
-                  setState(() {});
-          
-                  Navigator.of(context).pop();
+                    // Update the quantity and total in Firestore
+                    await DatabaseMethods().updateQtyAndTotalOfOrder(id!, item.id, newQuantity.toString(), newTotal.toString());
+            
+                    // Rebuild the widget tree to reflect the updated total
+                    setState(() {});
+            
+                    Navigator.of(context).pop();
+                  }else{
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text("Invalid Quantity"),
+                          content: const Text("Please enter a quantity of at least 1."),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text("OK"),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  }
                 },
               ),
             ],
@@ -314,7 +334,7 @@ class _OrdersState extends State<Orders> {
                       ),
                     ),
                   );
-                }else if(amount == 0){
+                }else if(total == 0){
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text(

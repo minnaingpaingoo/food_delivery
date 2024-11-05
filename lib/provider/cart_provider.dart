@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class CartProvider with ChangeNotifier{
@@ -21,13 +20,8 @@ class CartProvider with ChangeNotifier{
     notifyListeners();
   }
 
-  Future<void> initializeCount(String userId) async {
-    final cartSnapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('Cart')
-        .get();
-
-    _cartCount= cartSnapshot.docs.length;
+  setCount(int count){
+    _cartCount = count;
   }
+  
 }

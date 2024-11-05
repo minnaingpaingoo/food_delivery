@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:food_delivery/admin/home_admin.dart';
 import 'package:food_delivery/pages/bottom_nav/bottomnav.dart';
 import 'package:food_delivery/pages/forgot_password/forgot_password.dart';
+import 'package:food_delivery/provider/cart_provider.dart';
+import 'package:food_delivery/service/database.dart';
 import 'package:food_delivery/service/shared_pref.dart';
 import 'package:food_delivery/widget/widget_support.dart';
 import 'package:food_delivery/pages/authentication_page/signup.dart';
@@ -61,7 +63,9 @@ class _LogInState extends State<Login> {
         await helper.saveUserEmail(userData['Email']);
         await helper.saveUserWallet(userData['Wallet']);
         await helper.saveUserProfile(userData['Profile']);
-        await Provider.of(context, listen: false).initializeCount(userData['Id']);
+        
+        int count = await DatabaseMethods().initializeCount(userData['Id']);
+        Provider.of<CartProvider>(context, listen: false).setCount(count);
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
