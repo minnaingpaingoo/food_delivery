@@ -67,6 +67,15 @@ class DatabaseMethods{
       });
   }
 
+  Future<void> updateFoodItemVisibility(String categoryId, String subCategoryId, bool isVisible) async {
+    await FirebaseFirestore.instance
+        .collection('Categories')
+        .doc(categoryId)
+        .collection('SubCategory')
+        .doc(subCategoryId)
+        .update({'isVisible': isVisible});
+  }
+
   Future updateQtyAndTotalOfOrder(String id, String itemId, String newQty, String newTotal) async{
     return await FirebaseFirestore.instance
       .collection('users')

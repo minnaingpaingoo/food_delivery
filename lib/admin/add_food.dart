@@ -68,6 +68,7 @@ class _AddFoodState extends State<AddFood> {
         "Name": nameController.text,
         "Price": priceController.text,
         "Details": detailsController.text,
+        "isVisible": false,
       };
 
       String? categoryId = await DatabaseMethods().getCategoryIdByName(value!);
@@ -222,7 +223,15 @@ class _AddFoodState extends State<AddFood> {
                   child: TextFormField(
                     controller: priceController,
                     keyboardType: TextInputType.number,
-                    validator: (value) => value == null || value.isEmpty ? 'Please enter item price' : null,
+                    validator: (value){
+                       if (value == null || value.trim().isEmpty) {
+                        return 'Please enter a price';
+                      }
+                      if (double.tryParse(value) == null || double.parse(value) <= 0) {
+                        return 'Please enter a price greater than 0';
+                      }
+                      return null;
+                    },
                     decoration: InputDecoration(
                       border: InputBorder.none,
                       hintText: "Enter Item Price",
