@@ -30,24 +30,33 @@ class _LogInState extends State<Login> {
 
   Future <void> userLogin() async {
     try{
-      UserCredential userCredential = await FirebaseAuth.instance
-        .signInWithEmailAndPassword(
-          email: email,
-          password: password
-        );
+      // Check in the Admin collection
+      QuerySnapshot adminSnapshot = await FirebaseFirestore.instance
+        .collection('Admin')
+        .where('Email', isEqualTo: email)
+        .where('Password', isEqualTo: password)
+        .get();
 
-      CollectionReference adminCollection = FirebaseFirestore.instance.collection('Admin');
-      QuerySnapshot snapshot = await adminCollection.get();
-      late String adminEmail;
-      late String adminPassword;
-      // Loop through documents in the collection
-      for (var doc in snapshot.docs) {
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        adminEmail = data['Email'];
-        adminPassword = data['Password'];
+      if (adminSnapshot.docs.isNotEmpty) {
+        // If credentials match an admin, navigate to Admin home
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Login Successfully!",
+              style: TextStyle(
+                  fontSize: 20,
+                  color: Colors.greenAccent,
+              ),
+            ),
+          ),
+        );
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeAdmin()));
+        return;
       }
 
-      // Fetch user details from Firebase after login
+      // If not an admin, check in the Users collection
+      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password);
+
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
         .collection('users')
         .doc(userCredential.user?.uid)
@@ -79,46 +88,21 @@ class _LogInState extends State<Login> {
           ),
         );
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> const BottomNav()));
-      } else if(adminEmail != emailController.text.trim()){
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              "Admin Email is not correct!!",
-              style: TextStyle(
-                fontSize: 18.0,
-                color: Colors.redAccent,
-              ),
+        return;
+      } 
+    
+      //If no match found, show error
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Admin Email is not correct!!",
+            style: TextStyle(
+              fontSize: 18.0,
+              color: Colors.redAccent,
             ),
           ),
-        );
-      } else if(adminPassword != passwordController.text.trim()){
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              "Admin Password is not correct!!",
-              style: TextStyle(
-                fontSize: 18.0,
-                color: Colors.redAccent,
-              ),
-            ),
-          ),
-        );
-      }
-      else{
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              "Login Successfully!!",
-              style: TextStyle(
-                fontSize: 20,
-                color: Colors.greenAccent,
-              ),
-            ),
-          ),
-        );
-        Route route = MaterialPageRoute(builder: (context) => const HomeAdmin());
-        Navigator.pushReplacement(context, route);
-      }
+        ),
+      );
     }on FirebaseException catch(e){
       print('Error code: ${e.code}');//Debug code
       if(e.code == 'invalid-credential'){

@@ -1,5 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:food_delivery/service/database.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:food_delivery/widget/widget_support.dart';
 
 class AddCategory extends StatefulWidget {
@@ -13,15 +16,44 @@ class _AddCategoryState extends State<AddCategory> {
 
   final _formKey = GlobalKey<FormState>();
   String? name;
+  File? _imageFile;
   TextEditingController nameController = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
 
+  // Method to pick an image
+  Future<void> _pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+
+    setState(() {
+      if (pickedFile != null) {
+        _imageFile = File(pickedFile.path);
+      }
+    });
+  }
+
+  // Method to upload image and get the download URL
+  Future<String?> _uploadImage() async {
+    if (_imageFile == null) return null;
+    try {
+      String fileName = 'Categories/${DateTime.now().millisecondsSinceEpoch}.jpg';
+      UploadTask uploadTask = FirebaseStorage.instance
+        .ref()
+        .child(fileName)
+        .putFile(_imageFile!);
+      TaskSnapshot snapshot = await uploadTask;
+      return await snapshot.ref.getDownloadURL();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error uploading image: $e")),
+      );
+      return null;
+    }
+  }
 
   Future<void> addCategory() async {
+    String? imageUrl = await _uploadImage();
     try {
-      await FirebaseFirestore.instance.collection('categories').add({
-        'name': name,
-        'created_at': FieldValue.serverTimestamp(),
-      });
+      await DatabaseMethods().addCategory(name!, imageUrl!);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -35,119 +67,15 @@ class _AddCategoryState extends State<AddCategory> {
       );
 
       nameController.clear();
+      setState(() {
+        _imageFile = null;
+      });
 
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             'Error adding category: $e',
-            style: const TextStyle(
-              color: Colors.redAccent,
-            ),
-          ),
-        ),
-      );
-    }
-  }
-
-  Future<void> editCategory(DocumentSnapshot category) async {
-    nameController.text = category['name'];
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Edit Category'),
-          content: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Category Name'),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a category name';
-                    }
-                    return null;
-                  },
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (_formKey.currentState!.validate()) {
-                  try {
-                    await FirebaseFirestore.instance
-                      .collection('categories')
-                      .doc(category.id)
-                      .update({
-                      'name': nameController.text.trim(),
-                      });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Category updated successfully!',
-                          style: TextStyle(
-                            color: Colors.greenAccent,
-                          ),
-                        ),
-                      ),
-                    );
-                    nameController.clear();
-                    Navigator.of(context).pop();
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Error updating category: $e',
-                          style: const TextStyle(
-                            color: Colors.redAccent,
-                          ),
-                        ),
-                      ),
-                    );
-                  }
-                }
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> deleteCategory(String categoryId) async {
-    try {
-      await FirebaseFirestore.instance
-        .collection('categories')
-        .doc(categoryId)
-        .delete();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Category deleted successfully!',
-            style: TextStyle(
-              color: Colors.greenAccent,
-            ),
-          ),
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Error deleting category: $e',
             style: const TextStyle(
               color: Colors.redAccent,
             ),
@@ -176,139 +104,98 @@ class _AddCategoryState extends State<AddCategory> {
           style: AppWidget.headerTextFieldStyle(),
         ),
       ),
-      body:Column(
-        mainAxisSize: MainAxisSize.min,
+      body:SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children:[
             Form(
-            key: _formKey,
-            child: Container(
-              margin:const EdgeInsets.only(left: 20.0, right: 20.0, top: 20.0, bottom: 50.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Category Name",
-                    style: AppWidget.semiBoldTextFieldStyle(),
-                  ),
-                  const SizedBox(
-                    height: 10.0,
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    width: MediaQuery.of(context).size.width,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFececf8),
-                      borderRadius: BorderRadius.circular(10),
+              key: _formKey,
+              child: Container(
+                margin:const EdgeInsets.only(left: 20.0, right: 20.0, top: 20.0, bottom: 50.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Category Name",
+                      style: AppWidget.semiBoldTextFieldStyle(),
                     ),
-                    child: TextFormField(
-                      controller: nameController,
-                      validator: (value){
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a category name';
-                        }
-                        return null;
-                      },
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        hintText: "Enter Category Name",
-                        hintStyle: AppWidget.lightTextFieldStyle(),
+                    const SizedBox(
+                      height: 10.0,
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      width: MediaQuery.of(context).size.width,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFececf8),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: TextFormField(
+                        controller: nameController,
+                        validator: (value){
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a category name';
+                          }
+                          return null;
+                        },
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          hintText: "Enter Category Name",
+                          hintStyle: AppWidget.lightTextFieldStyle(),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 30.0,),
-                  Center(
-                    child: GestureDetector(
-                      onTap:() async{
-                        if(_formKey.currentState!.validate()){
-                          name = nameController.text.trim();
-                          await addCategory();
-                        }
-                      },
-                      child: Material(
-                        elevation: 5.0,
-                        borderRadius: BorderRadius.circular(10),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 5.0),
-                          width: 150,
-                          decoration: BoxDecoration(
-                            color: Colors.black,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              "Add",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
+                    const SizedBox(height: 20.0),
+                    GestureDetector(
+                      onTap: _pickImage,
+                      child: _imageFile != null
+                          ? Image.file(_imageFile!, height: 150, width: 150, fit: BoxFit.cover)
+                          : Container(
+                              height: 150,
+                              width: 150,
+                              color: Colors.grey[200],
+                              child: const Icon(Icons.add_a_photo, color: Colors.grey, size: 40),
+                            ),
+                    ),
+                    const SizedBox(height: 30.0,),
+                    Center(
+                      child: GestureDetector(
+                        onTap:() async{
+                          if(_formKey.currentState!.validate()){
+                            name = nameController.text.trim();
+                            await addCategory();
+                          }
+                        },
+                        child: Material(
+                          elevation: 5.0,
+                          borderRadius: BorderRadius.circular(10),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 5.0),
+                            width: 150,
+                            decoration: BoxDecoration(
+                              color: Colors.black,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                "Add",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 20),
-          Center(
-            child: Text(
-              "Category List",
-              style: AppWidget.boldTextFieldStyle(),
-            ),
-          ),
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                .collection('categories')
-                .orderBy('name')
-                .snapshots(),
-              builder: (context, snapshot){
-                if(snapshot.connectionState == ConnectionState.waiting){
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if(snapshot.hasError){
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
-
-                final List<DocumentSnapshot> categories = snapshot.data!.docs;
-
-                if(categories.isEmpty){
-                  return const Center(child: Text("No categories found"));
-                }
-
-                return ListView.builder(
-                  itemCount: categories.length,
-                  itemBuilder: (context, index){
-                    final Map<String, dynamic> category = categories[index].data() as Map<String, dynamic>;
-                    return ListTile(
-                      title: Text(
-                        category['name'] ?? 'Unnamed Category',
-                        style: AppWidget.semiBoldTextFieldStyle(),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit),
-                            onPressed: ()=> editCategory(categories[index]),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: ()=> deleteCategory(categories[index].id),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
           ],
+        ),
       ),
     );
   }

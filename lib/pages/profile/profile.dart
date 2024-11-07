@@ -4,7 +4,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:food_delivery/pages/authentication_page/login.dart';
 import 'package:food_delivery/pages/authentication_page/signup.dart';
-import 'package:food_delivery/pages/home/confirm_order.dart';
+import 'package:food_delivery/pages/profile/change_email.dart';
+import 'package:food_delivery/pages/profile/confirm_order.dart';
 import 'package:food_delivery/service/auth.dart';
 import 'package:food_delivery/service/database.dart';
 import 'package:food_delivery/service/shared_pref.dart';
@@ -156,6 +157,86 @@ class _ProfileState extends State<Profile> {
     }
   }
 
+  void _editName(String userId, String userName) async {
+    String? updatedName = await showEditNameDialog(context, userId, userName);
+    if (updatedName != null) {
+      setState(() {
+        name = updatedName; // Update the state with the new name and refresh UI
+      });
+    }
+  }
+
+  Future <String?> showEditNameDialog(BuildContext context, String id, String name) async {
+
+    final TextEditingController nameController = TextEditingController(text: name);
+
+    return showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return SingleChildScrollView(
+          child: AlertDialog(
+            title: const Text("Edit Name"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  keyboardType: TextInputType.name,
+                  maxLength: 30,
+                  decoration: const InputDecoration(
+                    hintText: "Enter New Name",
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                child: const Text("Cancel"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              TextButton(
+                child: const Text("Update"),
+                onPressed: () async {
+
+                  if(nameController.text.trim().isNotEmpty){
+
+                    await DatabaseMethods().updateUserName(id, nameController.text.trim());
+                    await SharedPreferenceHelper().saveUserName(nameController.text.trim());
+            
+                    //setState(() {});
+            
+                    Navigator.of(context).pop(nameController.text.trim());
+
+                  }else{
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text("Invalid Name"),
+                          content: const Text("Please enter new name"),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text("OK"),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -262,23 +343,41 @@ class _ProfileState extends State<Profile> {
                           color: Colors.black,
                         ),
                         const SizedBox(width: 20),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              const Text(
+                                "Name",
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                name!,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 20),
                         Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            const Text(
-                              "Name",
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              name!,
-                              style: const TextStyle(
-                                color: Colors.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            IconButton(
+                              onPressed: (){
+                                _editName(id!, name!);
+                              },
+                              icon: const Icon(Icons.edit),
+                              color: Colors.black,
                             ),
                           ],
                         ),
@@ -306,23 +405,41 @@ class _ProfileState extends State<Profile> {
                           color: Colors.black,
                         ),
                         const SizedBox(width: 20),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              const Text(
+                                "Email",
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                email!,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 20),
                         Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            const Text(
-                              "Email",
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              email!,
-                              style: const TextStyle(
-                                color: Colors.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            IconButton(
+                              onPressed: (){
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => const ChangeEmail()));
+                              },
+                              icon: const Icon(Icons.edit),
+                              color: Colors.black,
                             ),
                           ],
                         ),

@@ -7,6 +7,15 @@ class DatabaseMethods{
       .set(userInfoMap);
   }
 
+  Future addCategory(String name, String imageUrl) async{
+    return await FirebaseFirestore.instance.collection('Categories')
+      .add({
+        'CategoryName': name,
+        'ImageUrl': imageUrl, 
+        'Created_At': FieldValue.serverTimestamp(),
+      });
+  }
+
   Future updateUserWallet(String id, String amount) async{
     return await FirebaseFirestore.instance
       .collection('users')
@@ -14,11 +23,48 @@ class DatabaseMethods{
       .update({"Wallet": amount});
   }
 
+  Future updateCategoryImage(String categoryId, String categoryName, String imageUrl) async{
+    return await FirebaseFirestore.instance
+      .collection('Categories')
+      .doc(categoryId)
+      .update({
+        'CategoryName': categoryName,
+        'ImageUrl': imageUrl,
+    });
+  }
+
   Future updateUserProfile(String id, String url) async{
     return await FirebaseFirestore.instance
       .collection('users')
       .doc(id)
       .update({"Profile": url});
+  }
+
+  Future updateUserName(String id, String name) async{
+    return await FirebaseFirestore.instance
+      .collection('users')
+      .doc(id)
+      .update({"Name": name});
+  }
+
+  Future updateUserEmail(String id, String email) async{
+    return await FirebaseFirestore.instance
+      .collection('users')
+      .doc(id)
+      .update({"Email": email});
+  }
+
+  Future updateFoodItem(String categoryId, String foodItemId, String name, String price, String details) async{
+    return await FirebaseFirestore.instance
+      .collection('Categories')
+      .doc(categoryId)
+      .collection('SubCategory')
+      .doc(foodItemId)
+      .update({
+        'Name': name,
+        'Price': price,
+        'Details': details,
+      });
   }
 
   Future updateQtyAndTotalOfOrder(String id, String itemId, String newQty, String newTotal) async{
@@ -32,10 +78,25 @@ class DatabaseMethods{
         'Total': newTotal,
       });
   }
+  
+   Future<String?> getCategoryIdByName(String categoryName) async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Categories')
+        .where('CategoryName', isEqualTo: categoryName)
+        .limit(1)
+        .get();
 
-  Future addFoodItem(Map<String, dynamic> userInfoMap, String name) async{
+    if (querySnapshot.docs.isNotEmpty) {
+      return querySnapshot.docs.first.id; // categoryId
+    }
+    return null; // If no category found
+  }
+
+  Future addFoodItem(Map<String, dynamic> userInfoMap, String categoryId) async{
     return await FirebaseFirestore.instance
-      .collection(name)
+      .collection('Categories')
+      .doc(categoryId)
+      .collection('SubCategory')
       .add(userInfoMap);
   }
 
@@ -64,11 +125,41 @@ class DatabaseMethods{
       .delete();
   }
 
+  Future deleteCategory(String categoryId) async {
+    return await FirebaseFirestore.instance
+        .collection('Categories')
+        .doc(categoryId)
+        .delete();
+  }
+
+  Future<void> deleteFoodItem(String categoryId, String foodId) async {
+    await FirebaseFirestore.instance
+      .collection('Categories')
+      .doc(categoryId)
+      .collection('SubCategory')
+      .doc(foodId)
+      .delete();
+  }
+
   Future getAllItemsInCart(String id)async{
     return await FirebaseFirestore.instance
       .collection('users')
       .doc(id)
       .collection('Cart')
+      .get();
+  }
+
+  Future getCategorySnapshot()async{
+    return await FirebaseFirestore.instance
+      .collection('Categories')
+      .get();
+  }
+
+  Future getSubCategorySnapshot(String categoryId) async{
+    return await FirebaseFirestore.instance
+      .collection('Categories')
+      .doc(categoryId)
+      .collection('SubCategory')
       .get();
   }
 
