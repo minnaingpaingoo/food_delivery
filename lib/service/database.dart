@@ -67,7 +67,7 @@ class DatabaseMethods{
         'Name': name,
         'Price': price,
         'Details': details,
-        'ImageUrl': imageUrl,
+        'Image': imageUrl,
       });
   }
 
