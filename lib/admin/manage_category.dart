@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:food_delivery/service/database.dart';
-import 'package:food_delivery/widget/widget_support.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ManageCategory extends StatefulWidget {
@@ -191,19 +190,24 @@ class _ManageCategoryState extends State<ManageCategory> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.black,
         leading: GestureDetector(
           onTap: () {
             Navigator.pop(context);
           },
           child: const Icon(
             Icons.arrow_back_ios_new_outlined,
-            color: Color(0xFF373866),
+            color: Colors.white,
           ),
         ),
         centerTitle: true,
-        title: Text(
+        title: const Text(
           "Manage Category",
-          style: AppWidget.headerTextFieldStyle(),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       body: StreamBuilder<QuerySnapshot>(

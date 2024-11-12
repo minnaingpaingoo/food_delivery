@@ -17,14 +17,12 @@ class Home extends StatefulWidget {
 }
 class _HomeState extends State<Home> {
 
-  //For Select Item to change the color
-  bool icecream = false;
-  bool pizza = false;
-  bool burger = false;
-  bool salad = false;
+  String? selectedCategory;
 
-  Stream? foodItemStream;
   String? name;
+
+  Stream<List<Map<String, dynamic>>>? foodItemStream;
+
 
   getthesharepref()async{
     name = await SharedPreferenceHelper().getUserName();
@@ -35,7 +33,19 @@ class _HomeState extends State<Home> {
 
   ontheload() async {
     await getthesharepref();
-    foodItemStream = await DatabaseMethods().getFoodItem("Ice-cream");
+
+    var firstCategorySnapshot = await FirebaseFirestore.instance
+      .collection('Categories')
+      .limit(1)
+      .get();
+
+    if (firstCategorySnapshot.docs.isNotEmpty) {
+      // Set selectedCategory and load the food items for this category
+      var firstCategory = firstCategorySnapshot.docs.first.data();
+      selectedCategory = firstCategory['Name'];
+      foodItemStream = DatabaseMethods().getFoodItemsByCategory(firstCategorySnapshot.docs.first.id);
+    }
+
     if (mounted) {
       setState(() {});
     }
@@ -53,88 +63,127 @@ class _HomeState extends State<Home> {
   }
 
 
-  Widget allItems () {
-    return StreamBuilder(
+  Widget allItems() {
+    return StreamBuilder<List<Map<String, dynamic>>>(
       stream: foodItemStream,
-      builder: (context, AsyncSnapshot snapshot){
-        return snapshot.hasData?
-          ListView.builder(
-            padding: EdgeInsets.zero,
-            itemCount: snapshot.data.docs.length,
-            shrinkWrap: true,
-            scrollDirection: Axis.horizontal,
-            itemBuilder: (context, index){
-              DocumentSnapshot ds=snapshot.data.docs[index];
-              return GestureDetector(
-                onTap: (){
-                  Navigator.push(context, MaterialPageRoute(builder: (contex)=> Details(details: ds['Details'], name: ds['Name'], price: ds['Price'], image: ds['Image'],)));
-                },
-                child: Container(
-                  width: 210,
-                  padding: const EdgeInsets.all(4),
-                  child: Material(
-                    elevation: 5,
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding: const EdgeInsets.all(14),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Center(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(20),
-                              child: Image.network(
-                                ds['Image'],
-                                height: 150,
-                                width: 150,
-                                fit: BoxFit.cover,
-                              ),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+           return const Center(child: Text("No food items available"));
+        }
+        
+        // Filter items where isVisible is true
+        var items = snapshot.data!.where((item) => item['isVisible'] == true).toList();
+        return ListView.builder(
+          padding: EdgeInsets.zero,
+          itemCount: items.length,
+          shrinkWrap: true,
+          scrollDirection: Axis.horizontal,
+          itemBuilder: (context, index) {
+            var item = items[index];
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Details(
+                      details: item['Details'],
+                      name: item['Name'],
+                      price: item['Price'],
+                      image: item['Image'],
+                    ),
+                  ),
+                );
+              },
+              child: Container(
+                width: 210,
+                padding: const EdgeInsets.all(4),
+                child: Material(
+                  elevation: 5,
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: Image.network(
+                              item['Image'],
+                              height: 150,
+                              width: 150,
+                              fit: BoxFit.cover,
                             ),
                           ),
-                          const SizedBox(height: 10,),
-                          Text(
-                            ds['Name'],
-                            style: AppWidget.semiBoldTextFieldStyle(),
-                          ),
-                          Text(
-                            ds['Details'],
-                            style: AppWidget.lightTextFieldStyle(),
-                            maxLines: 1,
-                          ),
-                          Text(
-                            "\$"+ ds['Price'],
-                            style: AppWidget.semiBoldTextFieldStyle(),
-                          ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          item['Name'],
+                          style: AppWidget.semiBoldTextFieldStyle(),
+                        ),
+                        Text(
+                          item['Details'],
+                          style: AppWidget.lightTextFieldStyle(),
+                          maxLines: 1,
+                        ),
+                        Text(
+                          "\$" + item['Price'],
+                          style: AppWidget.semiBoldTextFieldStyle(),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              );
-            }
-          ) :
-          const Center(child: CircularProgressIndicator());
-      }
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
-  Widget allItemsVertically () {
-    return StreamBuilder(
+  Widget allItemsVertically() {
+    return StreamBuilder<List<Map<String, dynamic>>>(
       stream: foodItemStream,
-      builder: (context, AsyncSnapshot snapshot){
-        return snapshot.hasData ?
-          SizedBox(
+      builder: (context, AsyncSnapshot snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text("No food items available"));
+        }
+
+        // Filter items where isVisible is true
+        var items = snapshot.data!.where((item) => item['isVisible'] == true).toList();
+        if(items.length < 0){
+          return const Center(child: Text("No food items available"));
+        }else{
+          return SizedBox(
             height: 400,
             child: ListView.builder(
               padding: EdgeInsets.zero,
-              itemCount: snapshot.data.docs.length,
+              itemCount: items.length,
               shrinkWrap: true,
               scrollDirection: Axis.vertical,
-              itemBuilder: (context, index){
-                DocumentSnapshot ds=snapshot.data.docs[index];
+              itemBuilder: (context, index) {
+                var item = items[index];
                 return GestureDetector(
-                  onTap: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (contex)=> Details(details: ds['Details'], name: ds['Name'], price: ds['Price'], image: ds['Image'],)));
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Details(
+                          details: item['Details'],
+                          name: item['Name'],
+                          price: item['Price'],
+                          image: item['Image'],
+                        ),
+                      ),
+                    );
                   },
                   child: Container(
                     padding: const EdgeInsets.all(4),
@@ -147,7 +196,7 @@ class _HomeState extends State<Home> {
                           ClipRRect(
                             borderRadius: BorderRadius.circular(20),
                             child: Image.network(
-                              ds['Image'],
+                              item['Image'],
                               height: 150,
                               width: 150,
                               fit: BoxFit.cover,
@@ -158,20 +207,20 @@ class _HomeState extends State<Home> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const SizedBox(height: 5,),
+                                const SizedBox(height: 5),
                                 Text(
-                                  ds['Name'],
+                                  item['Name'],
                                   style: AppWidget.semiBoldTextFieldStyle(),
                                 ),
-                                const SizedBox(height: 5,),
+                                const SizedBox(height: 5),
                                 Text(
-                                  ds['Details'],
+                                  item['Details'],
                                   style: AppWidget.lightTextFieldStyle(),
                                   maxLines: 2,
                                 ),
-                                const SizedBox(height: 5,),
+                                const SizedBox(height: 5),
                                 Text(
-                                  "\$"+ ds['Price'],
+                                  "\$" + item['Price'],
                                   style: AppWidget.semiBoldTextFieldStyle(),
                                 ),
                               ],
@@ -182,13 +231,14 @@ class _HomeState extends State<Home> {
                     ),
                   ),
                 );
-              }
+              },
             ),
-          ) :
-          const Center(child: CircularProgressIndicator());
-      }
+          );
+        }  
+      },
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -288,118 +338,51 @@ class _HomeState extends State<Home> {
   }
 
   Widget showItem() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        GestureDetector(
-          onTap: () async{
-            icecream = true;
-            pizza = false;
-            salad = false;
-            burger = false;
-            foodItemStream = await DatabaseMethods().getFoodItem('Ice-cream');
-            setState(() {});
-          },
-          child: Material(
-            elevation: 5,
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
-              decoration: BoxDecoration(
-                color: icecream ? Colors.black : Colors.white,
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: DatabaseMethods().getCategoriesStream(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const CircularProgressIndicator();
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Text("No Categories Found");
+        }
+
+        var categories = snapshot.data!;
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: categories.map((category) {
+            bool isSelected = category['Name'] == selectedCategory; // Track selected category
+
+            return GestureDetector(
+              onTap: () async {
+                setState(() {
+                  selectedCategory = category['Name'];
+                });
+                foodItemStream = DatabaseMethods().getFoodItemsByCategory(category['Id']);
+              },
+              child: Material(
+                elevation: 5,
                 borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.black : Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.all(8),
+                  child: Image.network(
+                    category['Image'],
+                    height: 40,
+                    width: 40,
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
-              padding: const EdgeInsets.all(8),
-              child: Image.asset(
-                'images/ice_cream.png',
-                height: 40,
-                width: 40,
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-        ),
-        GestureDetector(
-          onTap: () async{
-            burger = true;
-            pizza = false;
-            salad = false;
-            icecream = false;
-            foodItemStream = await DatabaseMethods().getFoodItem('Burger');
-            setState(() {});
-          },
-          child: Material(
-            elevation: 5,
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
-              decoration: BoxDecoration(
-                color: burger ? Colors.black : Colors.white,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              padding: const EdgeInsets.all(8),
-              child: Image.asset(
-                'images/burger.png',
-                height: 40,
-                width: 40,
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-        ),
-        GestureDetector(
-          onTap: () async{
-            burger = false;
-            pizza = true;
-            salad = false;
-            icecream = false;
-            foodItemStream = await DatabaseMethods().getFoodItem('Pizza');
-            setState(() {});
-          },
-          child: Material(
-            elevation: 5,
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
-              decoration: BoxDecoration(
-                color: pizza ? Colors.black : Colors.white,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              padding: const EdgeInsets.all(8),
-              child: Image.asset(
-                'images/pizza.png',
-                height: 40,
-                width: 40,
-                fit: BoxFit.fill,
-              ),
-            ),
-          ),
-        ),
-        GestureDetector(
-          onTap: () async{
-            burger = false;
-            pizza = false;
-            salad = true;
-            icecream = false;
-            foodItemStream = await DatabaseMethods().getFoodItem('Salad');
-            setState(() {});
-          },
-          child: Material(
-            elevation: 5,
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
-              decoration: BoxDecoration(
-                color: salad ? Colors.black : Colors.white,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              padding: const EdgeInsets.all(8),
-              child: Image.asset(
-                'images/salad.png',
-                height: 40,
-                width: 40,
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-        ),
-      ],
+            );
+          }).toList(),
+        );
+      },
     );
   }
+
 }

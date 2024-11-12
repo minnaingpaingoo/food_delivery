@@ -4,6 +4,8 @@ import 'package:food_delivery/admin/add_category.dart';
 import 'package:food_delivery/admin/add_food.dart';
 import 'package:food_delivery/admin/manage_category.dart';
 import 'package:food_delivery/admin/manage_food.dart';
+import 'package:food_delivery/admin/order_confirm.dart';
+import 'package:food_delivery/admin/user_list.dart';
 import 'package:food_delivery/pages/authentication_page/login.dart';
 
 class HomeAdmin extends StatefulWidget {
@@ -15,11 +17,42 @@ class HomeAdmin extends StatefulWidget {
 
 class _HomeAdminState extends State<HomeAdmin> {
 
-  void logout() {
-    FirebaseAuth.instance.signOut();
-    // After logging out, navigate to the login screen.
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> const Login()));
+  void logout() async {
+    // Show confirmation dialog
+    bool confirmLogout = await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Confirm Logout"),
+          content: const Text("Are you sure you want to logout?"),
+          actions: [
+            TextButton(
+              child: const Text("No"),
+              onPressed: () {
+                Navigator.of(context).pop(false); // Return false if canceled
+              },
+            ),
+            TextButton(
+              child: const Text("Yes"),
+              onPressed: () {
+                Navigator.of(context).pop(true); // Return true if confirmed
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    // Check if user confirmed logout
+    if (confirmLogout) {
+
+      FirebaseAuth.instance.signOut();
+      // After logging out, navigate to the login screen.
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> const Login()));
+      
+    }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -216,7 +249,7 @@ class _HomeAdminState extends State<HomeAdmin> {
               const SizedBox(height: 10.0,),
               GestureDetector(
                 onTap: (){
-                  //Navigator.push(context, MaterialPageRoute(builder: (context)=> const OrderConfirm()));
+                  Navigator.push(context, MaterialPageRoute(builder: (context)=> const OrderConfirm()));
                 },
                 child: Material(
                   elevation: 10.0,
@@ -242,6 +275,47 @@ class _HomeAdminState extends State<HomeAdmin> {
                           const SizedBox(width: 20.0,) ,
                           const Text(
                             "Orders Confirmed \nList",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20.0,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10.0,),
+              GestureDetector(
+                onTap: (){
+                  Navigator.push(context, MaterialPageRoute(builder: (context)=> const UserList()));
+                },
+                child: Material(
+                  elevation: 10.0,
+                  borderRadius: BorderRadius.circular(10),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(6.0),
+                            child: Image.asset(
+                              "images/user_list.png",
+                              height: 100,
+                              width: 100,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          const SizedBox(width: 20.0,) ,
+                          const Text(
+                            "Users List",
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 20.0,

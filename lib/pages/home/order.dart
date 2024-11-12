@@ -84,6 +84,7 @@ class _OrdersState extends State<Orders> {
       'Email': email,
       'TotalPrice': total.toString(),
       'OrderDate': DateTime.now().toLocal(),
+      'DeliveryStatus': "Pending",
       'Items': orderItems
     };
 

@@ -153,6 +153,11 @@ class _ConfirmOrderState extends State<ConfirmOrder> {
                                 'Total Price: \$${orderData['TotalPrice']}',
                                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                               ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Delivery Status: ${orderData['DeliveryStatus']}',
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.blue),
+                              ),
                             ],
                           ),
                         ),

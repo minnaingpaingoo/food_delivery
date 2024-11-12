@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:food_delivery/service/database.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ManageFood extends StatefulWidget {
   const ManageFood({super.key});
@@ -12,6 +15,9 @@ class ManageFood extends StatefulWidget {
 class _ManageFoodState extends State<ManageFood> {
  
   List<Map<String, dynamic>> foodItems = [];
+
+  File? newImageFile;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -69,6 +75,11 @@ class _ManageFoodState extends State<ManageFood> {
     TextEditingController nameController = TextEditingController(text: foodItem['Name']);
     TextEditingController priceController = TextEditingController(text: foodItem['Price'].toString());
     TextEditingController detailController = TextEditingController(text: foodItem['Details'].toString());
+    
+    String? selectedCategoryId = foodItem['categoryId'];
+    String? selectedImageUrl = foodItem['Image'];
+
+    newImageFile = null;
 
     showDialog(
       context: context,
@@ -81,6 +92,7 @@ class _ManageFoodState extends State<ManageFood> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Name Field
                   TextFormField(
                     controller: nameController,
                     decoration: const InputDecoration(labelText: 'Name'),
@@ -91,6 +103,7 @@ class _ManageFoodState extends State<ManageFood> {
                       return null;
                     },
                   ),
+                  // Price Field
                   TextFormField(
                     controller: priceController,
                     decoration: const InputDecoration(labelText: 'Price'),
@@ -105,6 +118,7 @@ class _ManageFoodState extends State<ManageFood> {
                       return null;
                     },
                   ),
+                  // Details Field
                   TextFormField(
                     controller: detailController,
                     maxLines: 3,
@@ -115,6 +129,65 @@ class _ManageFoodState extends State<ManageFood> {
                       }
                       return null;
                     },
+                  ),
+                  const SizedBox(height: 16),
+                  // Category Dropdown
+                  FutureBuilder<List<Map<String, dynamic>>>(
+                    future: DatabaseMethods().getCategories(), // Fetch categories
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return const CircularProgressIndicator();
+                      }
+                      final categories = snapshot.data!;
+                      return DropdownButtonFormField<String>(
+                        value: selectedCategoryId,
+                        items: categories.map<DropdownMenuItem<String>>((category) { // Explicitly specify the type
+                          return DropdownMenuItem<String>(
+                            value: category['CategoryId'],
+                            child: Text(category['Name']),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          selectedCategoryId = value;
+                        },
+                        decoration: const InputDecoration(labelText: 'Category'),
+                        validator: (value) {
+                          if (value == null) {
+                            return 'Please select a category';
+                          }
+                          return null;
+                        },
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  const Center(child: Text("Tap the Image to change Picture.", style: TextStyle(color: Colors.redAccent))),
+                  const SizedBox(height: 16),
+                  // Image Picker
+                  GestureDetector(
+                    onTap: () async {
+                      final pickedImage = await _picker.pickImage(source: ImageSource.gallery);
+                      if (pickedImage != null) {
+                        setState(() {
+                          newImageFile = File(pickedImage.path);
+                        });
+                      }
+                    },
+                    child: newImageFile != null
+                        ? Image.file(
+                          newImageFile!,
+                          width: 100,
+                          height: 100,
+                          fit: BoxFit.cover
+                        )
+                        : selectedImageUrl!= null
+                            ? Image.network(selectedImageUrl!, width: 100, height: 100, fit: BoxFit.cover)
+                            : Container(
+                                width: 100,
+                                height: 100,
+                                color: Colors.grey[300],
+                                child: const Icon(Icons.camera_alt, size: 50),
+                              ),
                   ),
                 ],
               ),
@@ -128,15 +201,24 @@ class _ManageFoodState extends State<ManageFood> {
             ElevatedButton(
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
+                  
+                  String? newImageUrl = selectedImageUrl;
+
+                  if (newImageFile != null) {
+                    // Upload the new image and get its URL
+                    newImageUrl = await DatabaseMethods().uploadImage(newImageFile!);
+                  }
+
+                  // Update food item in Firestore
                   await DatabaseMethods().updateFoodItem(
-                    foodItem['categoryId'],
+                    selectedCategoryId!,
                     foodItem['subCategoryId'],
                     nameController.text.trim(),
                     priceController.text.trim(),
                     detailController.text.trim(),
+                    newImageUrl!,
                   );
 
-                  Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text(
@@ -145,6 +227,12 @@ class _ManageFoodState extends State<ManageFood> {
                       ),
                     ),
                   );
+                  nameController.clear();
+                  priceController.clear();
+                  detailController.clear();
+                  selectedCategoryId = "";
+                  selectedImageUrl= "";
+                  Navigator.of(context).pop();
                   fetchAllFoodItems(); // Refresh after update
                 }
               },
@@ -161,8 +249,25 @@ class _ManageFoodState extends State<ManageFood> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manage Food'),
+        backgroundColor: Colors.black,
+        leading: GestureDetector(
+          onTap: () {
+            Navigator.pop(context);
+          },
+          child: const Icon(
+            Icons.arrow_back_ios_new_outlined,
+            color: Colors.white,
+          ),
+        ),
         centerTitle: true,
+        title: const Text(
+          "Manage Food",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
       body: 
       foodItems.isEmpty

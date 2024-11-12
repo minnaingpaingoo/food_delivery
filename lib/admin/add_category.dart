@@ -89,19 +89,24 @@ class _AddCategoryState extends State<AddCategory> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.black,
         leading: GestureDetector(
           onTap: (){
             Navigator.pop(context);
           },
           child: const Icon(
             Icons.arrow_back_ios_new_outlined,
-            color: Color(0xFF373866),
+            color: Colors.white,
           ),
         ),
         centerTitle: true,
-        title: Text(
+        title: const Text(
           "Add Category",
-          style: AppWidget.headerTextFieldStyle(),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       body:SingleChildScrollView(

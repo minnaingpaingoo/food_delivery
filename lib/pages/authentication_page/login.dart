@@ -30,33 +30,39 @@ class _LogInState extends State<Login> {
 
   Future <void> userLogin() async {
     try{
-      // Check in the Admin collection
-      QuerySnapshot adminSnapshot = await FirebaseFirestore.instance
-        .collection('Admin')
-        .where('Email', isEqualTo: email)
-        .where('Password', isEqualTo: password)
-        .get();
 
-      if (adminSnapshot.docs.isNotEmpty) {
-        // If credentials match an admin, navigate to Admin home
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              "Login Successfully!",
-              style: TextStyle(
-                  fontSize: 20,
-                  color: Colors.greenAccent,
-              ),
-            ),
-          ),
-        );
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeAdmin()));
-        return;
-      }
-
-      // If not an admin, check in the Users collection
+      //Authenticate User
       UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password);
 
+      // Get user UID
+      String uid = userCredential.user!.uid;
+      // Check user role in Firestore
+      DocumentSnapshot adminDoc = await FirebaseFirestore.instance
+        .collection('Roles').doc(uid).get();
+
+      if (adminDoc.exists) {
+        String role = adminDoc.get('Role');
+        if (role == "admin") {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                "Login Successfully!",
+                style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.greenAccent,
+                ),
+              ),
+            ),
+          );
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeAdmin()));
+          return;
+        }
+        else{
+          throw Exception("User role not found"); 
+        }
+      }
+  
+      // If not an admin, check in the Users collection
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
         .collection('users')
         .doc(userCredential.user?.uid)
