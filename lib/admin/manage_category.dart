@@ -31,46 +31,50 @@ class _ManageCategoryState extends State<ManageCategory> {
           title: const Text('Edit Category'),
           content: Form(
             key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                GestureDetector(
-                  onTap: () async {
-                    final pickedImage = await _picker.pickImage(source: ImageSource.gallery);
-                    if (pickedImage != null) {
-                      setState(() {
-                        _newImageFile = File(pickedImage.path);
-                      });
-                    }
-                  },
-                  child: _newImageFile != null
-                      ? Image.file(
-                        _newImageFile!,
-                        width: 100,
-                        height: 100,
-                        fit: BoxFit.cover
-                      )
-                      : category['ImageUrl'] != null
-                          ? Image.network(category['ImageUrl'], width: 100, height: 100, fit: BoxFit.cover)
-                          : Container(
-                              width: 100,
-                              height: 100,
-                              color: Colors.grey[300],
-                              child: const Icon(Icons.camera_alt, size: 50),
-                            ),
-                ),
-                const SizedBox(height: 10),
-                TextFormField(
-                  controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Category Name'),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a category name';
-                    }
-                    return null;
-                  },
-                ),
-              ],
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Center(child: Text("Tap the Image to change Picture.", style: TextStyle(color: Colors.redAccent))),
+                  const SizedBox(height: 16),
+                  GestureDetector(
+                    onTap: () async {
+                      final pickedImage = await _picker.pickImage(source: ImageSource.gallery);
+                      if (pickedImage != null) {
+                        setState(() {
+                          _newImageFile = File(pickedImage.path);
+                        });
+                      }
+                    },
+                    child: _newImageFile != null
+                        ? Image.file(
+                          _newImageFile!,
+                          width: 120,
+                          height: 120,
+                          fit: BoxFit.cover
+                        )
+                        : category['ImageUrl'] != null
+                            ? Image.network(category['ImageUrl'], width: 120, height: 120, fit: BoxFit.cover)
+                            : Container(
+                                width: 120,
+                                height: 120,
+                                color: Colors.grey[300],
+                                child: const Icon(Icons.camera_alt, size: 50),
+                              ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: nameController,
+                    decoration: const InputDecoration(labelText: 'Category Name'),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a category name';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
           actions: [

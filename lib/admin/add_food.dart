@@ -56,8 +56,8 @@ class _AddFoodState extends State<AddFood> {
 
   uploadItem() async{
     if(_formKey.currentState!.validate() && selectedImage!=null){
+      
       String addId = randomAlphaNumeric(10);
-
       Reference firebaseStorageRef = FirebaseStorage.instance.ref().child("blogImages").child(addId);
       final UploadTask task = firebaseStorageRef.putFile(selectedImage!);
       

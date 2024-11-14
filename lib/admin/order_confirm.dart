@@ -26,7 +26,6 @@ class _OrderConfirmState extends State<OrderConfirm> {
       setState(() {
         confirmedOrders = orders;
         showDetails = List<bool>.filled(orders.length, false);
-        print(confirmedOrders);
       });
     } catch (e) {
       print("Error fetching confirmed orders: $e");

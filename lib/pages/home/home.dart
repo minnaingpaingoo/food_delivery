@@ -246,7 +246,8 @@ class _HomeState extends State<Home> {
       //key: BottomNav.bottomNavKey,
       body: SingleChildScrollView(
         child: Container(
-          margin: const EdgeInsets.only(left: 20, top: 50),
+          margin: const EdgeInsets.only(left: 20, top: 35
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
